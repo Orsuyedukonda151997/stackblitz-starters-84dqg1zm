@@ -1,110 +1,114 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { supabase } from "./supabase";
+import { useState } from "react"
+import { supabase } from "./supabase"
 
 export default function Home() {
 
-  const [active, setActive] = useState("Chat");
-  const [apiKey, setApiKey] = useState("");
+  const [apiKey, setApiKey] = useState("")
+  const [provider, setProvider] = useState("openai")
+  const [status, setStatus] = useState("")
 
-  async function saveApiKey() {
+  async function saveKey() {
 
     if (!apiKey) {
-      alert("Enter API key first");
-      return;
+      setStatus("Enter API key")
+      return
     }
 
     const { error } = await supabase
       .from("api_keys")
       .insert([
         {
-          user_id: "demo-user",
-          api_key: apiKey
+          user_id: "desktop_user",
+          api_key: apiKey,
+          provider: provider
         }
-      ]);
+      ])
 
     if (error) {
-      alert("Error saving key");
-      console.log(error);
+      setStatus("Error saving")
+      console.log(error)
     } else {
-      alert("API key saved successfully");
-      setApiKey("");
+      setStatus("Saved successfully")
+      setApiKey("")
     }
 
   }
 
   return (
-    <main style={{ display: "flex", height: "100vh" }}>
+
+    <div style={{
+      display:"flex",
+      height:"100vh",
+      background:"#111",
+      color:"#fff"
+    }}>
 
       <div style={{
-        width: "250px",
-        background: "#111",
-        color: "#fff",
-        padding: "20px"
+        width:"250px",
+        background:"#000",
+        padding:"20px"
       }}>
-
         <h2>AI Workspace</h2>
 
-        {["Chat","Images","Files","Automations","API Keys"].map(item => (
-          <div
-            key={item}
-            onClick={() => setActive(item)}
-            style={{
-              padding: "8px",
-              cursor: "pointer",
-              background: active === item ? "#333" : "transparent"
-            }}
-          >
-            {item}
-          </div>
-        ))}
+        <p>API Keys</p>
 
       </div>
 
-      <div style={{ flex: 1, padding: "20px" }}>
+      <div style={{
+        padding:"30px"
+      }}>
 
-        <h1>{active}</h1>
+        <h1>Add API Key</h1>
 
-        {active === "API Keys" && (
+        <input
+          style={{
+            padding:"10px",
+            width:"300px"
+          }}
+          placeholder="Enter API key"
+          value={apiKey}
+          onChange={(e)=>setApiKey(e.target.value)}
+        />
 
-          <div>
+        <br/><br/>
 
-            <p>Enter your API key:</p>
+        <select
+          value={provider}
+          onChange={(e)=>setProvider(e.target.value)}
+        >
 
-            <input
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-..."
-              style={{
-                padding: "10px",
-                width: "300px"
-              }}
-            />
+          <option value="openai">
+            OpenAI
+          </option>
 
-            <br />
+          <option value="anthropic">
+            Claude
+          </option>
 
-            <button
-              onClick={saveApiKey}
-              style={{
-                marginTop: "10px",
-                padding: "10px",
-                cursor: "pointer"
-              }}
-            >
-              Save Key
-            </button>
+          <option value="google">
+            Gemini
+          </option>
 
-          </div>
+        </select>
 
-        )}
+        <br/><br/>
 
-        {active !== "API Keys" && (
-          <p>{active} panel will load here.</p>
-        )}
+        <button
+          onClick={saveKey}
+          style={{
+            padding:"10px 20px"
+          }}
+        >
+          Save
+        </button>
+
+        <p>{status}</p>
 
       </div>
 
-    </main>
-  );
-  }
+    </div>
+
+  )
+}
