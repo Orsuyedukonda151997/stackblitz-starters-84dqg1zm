@@ -5,33 +5,56 @@ import { supabase } from "./supabase"
 
 export default function Home() {
 
-  const [apiKey, setApiKey] = useState("")
-  const [provider, setProvider] = useState("openai")
-  const [status, setStatus] = useState("")
+  const [apiKey,setApiKey] = useState("")
+  const [provider,setProvider] = useState("openai")
+  const [prompt,setPrompt] = useState("")
+  const [response,setResponse] = useState("")
+  const [status,setStatus] = useState("")
 
-  async function saveKey() {
-
-    if (!apiKey) {
-      setStatus("Please enter an API key")
-      return
-    }
+  async function saveKey(){
 
     const { error } = await supabase
       .from("api_keys")
       .insert([
         {
-          user_id: "desktop_user",
-          api_key: apiKey,
-          provider: provider
+          user_id:"desktop_user",
+          api_key:apiKey,
+          provider:provider
         }
       ])
 
-    if (error) {
-      console.log(error)
+    if(error){
       setStatus("Error saving key")
-    } else {
-      setStatus("API key saved successfully")
-      setApiKey("")
+    }else{
+      setStatus("Key saved")
+    }
+
+  }
+
+  async function sendPrompt(){
+
+    const res = await fetch(
+      "/api/chat",
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
+        },
+        body:JSON.stringify({
+          apiKey:apiKey,
+          message:prompt
+        })
+      }
+    )
+
+    const data = await res.json()
+
+    if(data.choices){
+      setResponse(
+        data.choices[0].message.content
+      )
+    }else{
+      setResponse("Error")
     }
 
   }
@@ -39,102 +62,61 @@ export default function Home() {
   return (
 
     <div style={{
-      display: "flex",
-      height: "100vh",
-      fontFamily: "Arial"
+      display:"flex",
+      height:"100vh"
     }}>
 
-      {/* Sidebar */}
       <div style={{
-        width: "250px",
-        background: "#ff6a00",
-        color: "#fff",
-        padding: "20px"
+        width:"250px",
+        background:"#ff6a00",
+        color:"#fff",
+        padding:"20px"
       }}>
-
-        <h2 style={{marginBottom:"30px"}}>
-          AI Workspace
-        </h2>
-
-        <p style={{marginBottom:"10px"}}>API Keys</p>
-        <p style={{marginBottom:"10px"}}>Images</p>
-        <p style={{marginBottom:"10px"}}>Files</p>
-        <p style={{marginBottom:"10px"}}>Automations</p>
-
+        <h2>AI Workspace</h2>
       </div>
 
-
-      {/* Main panel */}
       <div style={{
-        flex: 1,
-        padding: "40px",
-        background: "#ffffff",
-        color: "#000"
+        padding:"30px",
+        flex:1,
+        background:"#fff"
       }}>
 
-        <h1 style={{
-          color:"#ff6a00",
-          marginBottom:"20px"
-        }}>
-          Add API Key
-        </h1>
+        <h2>API Key</h2>
 
         <input
-          type="text"
-          placeholder="Enter API key"
           value={apiKey}
           onChange={(e)=>setApiKey(e.target.value)}
-          style={{
-            padding: "12px",
-            width: "350px",
-            border: "2px solid #ff6a00",
-            borderRadius: "6px",
-            marginBottom:"15px"
-          }}
+          placeholder="Enter API key"
+          style={{padding:"10px",width:"300px"}}
         />
 
-        <br/>
+        <br/><br/>
 
-        <select
-          value={provider}
-          onChange={(e)=>setProvider(e.target.value)}
-          style={{
-            padding: "12px",
-            width:"200px",
-            border: "2px solid #ff6a00",
-            borderRadius: "6px",
-            marginBottom:"20px"
-          }}
-        >
-
-          <option value="openai">OpenAI</option>
-          <option value="anthropic">Claude</option>
-          <option value="google">Gemini</option>
-
-        </select>
-
-        <br/>
-
-        <button
-          onClick={saveKey}
-          style={{
-            padding: "12px 25px",
-            background: "#ff6a00",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight:"bold"
-          }}
-        >
-          Save API Key
+        <button onClick={saveKey}>
+          Save Key
         </button>
 
-        <p style={{
-          marginTop:"15px",
-          color:"#ff6a00"
-        }}>
-          {status}
+        <p>{status}</p>
+
+        <hr/>
+
+        <h2>Chat</h2>
+
+        <input
+          value={prompt}
+          onChange={(e)=>setPrompt(e.target.value)}
+          placeholder="Ask something"
+          style={{padding:"10px",width:"400px"}}
+        />
+
+        <br/><br/>
+
+        <button onClick={sendPrompt}>
+          Send
+        </button>
+
+        <p>
+          {response}
         </p>
 
       </div>
@@ -143,4 +125,4 @@ export default function Home() {
 
   )
 
-      }
+          }
