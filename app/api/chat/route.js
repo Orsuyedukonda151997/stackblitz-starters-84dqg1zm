@@ -5,20 +5,20 @@ export async function POST(req) {
   const apiKey = body.apiKey
   const message = body.message
 
+  // GOOGLE GEMINI REQUEST
   const response = await fetch(
-    "https://api.openai.com/v1/chat/completions",
+    `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
+        contents: [
           {
-            role: "user",
-            content: message
+            parts: [
+              { text: message }
+            ]
           }
         ]
       })
@@ -27,6 +27,12 @@ export async function POST(req) {
 
   const data = await response.json()
 
-  return Response.json(data)
+  const reply =
+    data?.candidates?.[0]?.content?.parts?.[0]?.text
+    || "No response"
 
-}
+  return Response.json({
+    reply: reply
+  })
+
+        }
