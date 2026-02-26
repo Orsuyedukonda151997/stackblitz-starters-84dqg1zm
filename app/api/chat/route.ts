@@ -5,7 +5,7 @@ export async function POST(req: Request) {
     const { apiKey, message } = await req.json()
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
@@ -25,23 +25,22 @@ export async function POST(req: Request) {
 
     if (data.error) {
       return Response.json({
-        reply: "Error: " + data.error.message
+        reply: data.error.message
       })
     }
 
-    const reply =
-      data.candidates?.[0]?.content?.parts?.[0]?.text
-
     return Response.json({
-      reply: reply || "Empty response"
+      reply:
+        data.candidates?.[0]?.content?.parts?.[0]?.text ||
+        "No response"
     })
 
-  } catch (e) {
+  } catch {
 
     return Response.json({
-      reply: "Server crash"
+      reply: "Server error"
     })
 
   }
 
-      }
+    }
