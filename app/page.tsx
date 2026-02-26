@@ -5,6 +5,7 @@ import { useState } from "react";
 export default function Home() {
 
   const [active, setActive] = useState("Chat");
+  const [apiKey, setApiKey] = useState("");
 
   return (
     <main style={{ display: "flex", height: "100vh" }}>
@@ -38,12 +39,44 @@ export default function Home() {
 
         <h1>{active}</h1>
 
-        <p>
-          {active} panel will load here.
-        </p>
+        {active === "API Keys" && (
+          <div>
+
+            <p>Add your OpenAI API key:</p>
+
+            <input
+              type="text"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="sk-..."
+              style={{
+                padding: "10px",
+                width: "300px",
+                marginTop: "10px"
+              }}
+            />
+
+            <br />
+
+            <button
+              style={{
+                marginTop: "10px",
+                padding: "10px"
+              }}
+              onClick={() => alert("API Key saved (temporary)")}
+            >
+              Save Key
+            </button>
+
+          </div>
+        )}
+
+        {active !== "API Keys" && (
+          <p>{active} panel will load here.</p>
+        )}
 
       </div>
 
     </main>
   );
-                }
+      }
