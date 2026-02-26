@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server"
-
 export async function POST(req: Request) {
 
   try {
@@ -9,7 +7,13 @@ export async function POST(req: Request) {
     const apiKey = body.apiKey
     const message = body.message
 
-    const response = await fetch(
+    if (!apiKey) {
+      return Response.json({
+        reply: "No API key"
+      })
+    }
+
+    const res = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey,
       {
         method: "POST",
@@ -30,21 +34,21 @@ export async function POST(req: Request) {
       }
     )
 
-    const data = await response.json()
+    const data = await res.json()
 
     const reply =
       data?.candidates?.[0]?.content?.parts?.[0]?.text
-      || "No response"
+      || "No response from Gemini"
 
-    return NextResponse.json({
-      reply: reply
+    return Response.json({
+      reply
     })
 
   }
-  catch {
+  catch (e) {
 
-    return NextResponse.json({
-      reply: "Error connecting to Gemini"
+    return Response.json({
+      reply: "Server error"
     })
 
   }
