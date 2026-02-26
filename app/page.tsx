@@ -12,7 +12,7 @@ export default function Home() {
   async function saveKey() {
 
     if (!apiKey) {
-      setStatus("Enter API key")
+      setStatus("Please enter an API key")
       return
     }
 
@@ -27,10 +27,10 @@ export default function Home() {
       ])
 
     if (error) {
-      setStatus("Error saving")
       console.log(error)
+      setStatus("Error saving key")
     } else {
-      setStatus("Saved successfully")
+      setStatus("API key saved successfully")
       setApiKey("")
     }
 
@@ -39,76 +39,108 @@ export default function Home() {
   return (
 
     <div style={{
-      display:"flex",
-      height:"100vh",
-      background:"#111",
-      color:"#fff"
+      display: "flex",
+      height: "100vh",
+      fontFamily: "Arial"
     }}>
 
+      {/* Sidebar */}
       <div style={{
-        width:"250px",
-        background:"#000",
-        padding:"20px"
+        width: "250px",
+        background: "#ff6a00",
+        color: "#fff",
+        padding: "20px"
       }}>
-        <h2>AI Workspace</h2>
 
-        <p>API Keys</p>
+        <h2 style={{marginBottom:"30px"}}>
+          AI Workspace
+        </h2>
+
+        <p style={{marginBottom:"10px"}}>API Keys</p>
+        <p style={{marginBottom:"10px"}}>Images</p>
+        <p style={{marginBottom:"10px"}}>Files</p>
+        <p style={{marginBottom:"10px"}}>Automations</p>
 
       </div>
 
+
+      {/* Main panel */}
       <div style={{
-        padding:"30px"
+        flex: 1,
+        padding: "40px",
+        background: "#ffffff",
+        color: "#000"
       }}>
 
-        <h1>Add API Key</h1>
+        <h1 style={{
+          color:"#ff6a00",
+          marginBottom:"20px"
+        }}>
+          Add API Key
+        </h1>
 
         <input
-          style={{
-            padding:"10px",
-            width:"300px"
-          }}
+          type="text"
           placeholder="Enter API key"
           value={apiKey}
           onChange={(e)=>setApiKey(e.target.value)}
+          style={{
+            padding: "12px",
+            width: "350px",
+            border: "2px solid #ff6a00",
+            borderRadius: "6px",
+            marginBottom:"15px"
+          }}
         />
 
-        <br/><br/>
+        <br/>
 
         <select
           value={provider}
           onChange={(e)=>setProvider(e.target.value)}
+          style={{
+            padding: "12px",
+            width:"200px",
+            border: "2px solid #ff6a00",
+            borderRadius: "6px",
+            marginBottom:"20px"
+          }}
         >
 
-          <option value="openai">
-            OpenAI
-          </option>
-
-          <option value="anthropic">
-            Claude
-          </option>
-
-          <option value="google">
-            Gemini
-          </option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Claude</option>
+          <option value="google">Gemini</option>
 
         </select>
 
-        <br/><br/>
+        <br/>
 
         <button
           onClick={saveKey}
           style={{
-            padding:"10px 20px"
+            padding: "12px 25px",
+            background: "#ff6a00",
+            color: "#fff",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            fontWeight:"bold"
           }}
         >
-          Save
+          Save API Key
         </button>
 
-        <p>{status}</p>
+        <p style={{
+          marginTop:"15px",
+          color:"#ff6a00"
+        }}>
+          {status}
+        </p>
 
       </div>
 
     </div>
 
   )
-}
+
+      }
