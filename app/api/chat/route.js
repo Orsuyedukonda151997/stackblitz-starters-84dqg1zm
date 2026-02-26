@@ -3,72 +3,80 @@ export async function POST(req) {
     const body = await req.json();
     const message = body.message;
     const apiKey = body.apiKey;
+    const model = body.model || "gemini-2.5-flash";
 
-    if (!apiKey || !message) {
-      return new Response(
-        JSON.stringify({ text: "Missing API key or message" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
-      );
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: "Missing API key" }), {
+        status: 400,
+      });
     }
 
-    // IMPORTANT: API key must be appended like this
-    const url =
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
-      apiKey;
+    // Real-time context
+    const now = new Date();
+    const date = now.toLocaleDateString();
+    const time = now.toLocaleTimeString();
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    const geminiRes = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: message }
-            ],
-          },
-        ],
-      }),
-    });
+    const systemPrompt = `
+You are an accurate AI assistant inside a desktop AI workspace.
 
-    const data = await geminiRes.json();
+Rules:
+• Always use the provided current date/time as truth.
+• Current date: ${date}
+• Current time: ${time}
+• Timezone: ${timezone}
 
-    console.log("Gemini response:", data);
+• If user asks about date/time, use this exact value.
+• Do NOT invent fake dates.
+• Answer clearly and accurately.
+`;
 
-    let reply = "No response from Gemini";
-
-    if (
-      data.candidates &&
-      data.candidates.length > 0 &&
-      data.candidates[0].content &&
-      data.candidates[0].content.parts &&
-      data.candidates[0].content.parts.length > 0
-    ) {
-      reply = data.candidates[0].content.parts[0].text;
-    }
-
-    if (data.error) {
-      reply = data.error.message;
-    }
-
-    return new Response(
-      JSON.stringify({ text: reply }),
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text:
+                    systemPrompt +
+                    "\n\nUser message:\n" +
+                    message,
+                },
+              ],
+            },
+          ],
+        }),
       }
     );
 
-  } catch (err) {
-    console.log(err);
+    const data = await response.json();
 
+    let text = "No response";
+
+    if (data.candidates?.length > 0) {
+      text =
+        data.candidates[0]?.content?.parts?.[0]?.text ||
+        "Empty reply";
+    }
+
+    if (data.error) {
+      text = data.error.message;
+    }
+
+    return new Response(JSON.stringify({ text }), {
+      status: 200,
+    });
+  } catch (error) {
     return new Response(
-      JSON.stringify({ text: "Server error" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: "Server error" }),
+      { status: 500 }
     );
   }
 }
