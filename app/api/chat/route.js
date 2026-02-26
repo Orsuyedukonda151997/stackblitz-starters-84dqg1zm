@@ -4,57 +4,71 @@ export async function POST(req) {
     const message = body.message;
     const apiKey = body.apiKey;
 
-    if (!apiKey) {
+    if (!apiKey || !message) {
       return new Response(
-        JSON.stringify({ error: "Missing API key" }),
-        { status: 400 }
+        JSON.stringify({ text: "Missing API key or message" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { text: message }
-              ]
-            }
-          ]
-        })
-      }
-    );
+    // IMPORTANT: API key must be appended like this
+    const url =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
+      apiKey;
 
-    const data = await response.json();
+    const geminiRes = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              { text: message }
+            ],
+          },
+        ],
+      }),
+    });
 
-    let text = "No response";
+    const data = await geminiRes.json();
 
-    if (data.candidates &&
-        data.candidates[0] &&
-        data.candidates[0].content &&
-        data.candidates[0].content.parts &&
-        data.candidates[0].content.parts[0]) {
-      text = data.candidates[0].content.parts[0].text;
+    console.log("Gemini response:", data);
+
+    let reply = "No response from Gemini";
+
+    if (
+      data.candidates &&
+      data.candidates.length > 0 &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts.length > 0
+    ) {
+      reply = data.candidates[0].content.parts[0].text;
     }
 
     if (data.error) {
-      text = data.error.message;
+      reply = data.error.message;
     }
 
     return new Response(
-      JSON.stringify({ text }),
-      { status: 200 }
+      JSON.stringify({ text: reply }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
     );
 
-  } catch (error) {
+  } catch (err) {
+    console.log(err);
+
     return new Response(
-      JSON.stringify({ error: "Server error" }),
-      { status: 500 }
+      JSON.stringify({ text: "Server error" }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
     );
   }
-        }
+}
