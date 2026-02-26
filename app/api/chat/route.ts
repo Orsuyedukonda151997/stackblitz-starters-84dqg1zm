@@ -2,19 +2,10 @@ export async function POST(req: Request) {
 
   try {
 
-    const body = await req.json()
-
-    const apiKey = body.apiKey
-    const message = body.message
-
-    if (!apiKey) {
-      return Response.json({
-        reply: "No API key"
-      })
-    }
+    const { apiKey, message } = await req.json()
 
     const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" + apiKey,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: {
@@ -23,11 +14,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           contents: [
             {
-              parts: [
-                {
-                  text: message
-                }
-              ]
+              parts: [{ text: message }]
             }
           ]
         })
@@ -36,19 +23,23 @@ export async function POST(req: Request) {
 
     const data = await res.json()
 
+    if (data.error) {
+      return Response.json({
+        reply: "Error: " + data.error.message
+      })
+    }
+
     const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text
-      || "No response from Gemini"
+      data.candidates?.[0]?.content?.parts?.[0]?.text
 
     return Response.json({
-      reply
+      reply: reply || "Empty response"
     })
 
-  }
-  catch (e) {
+  } catch (e) {
 
     return Response.json({
-      reply: "Server error"
+      reply: "Server crash"
     })
 
   }
