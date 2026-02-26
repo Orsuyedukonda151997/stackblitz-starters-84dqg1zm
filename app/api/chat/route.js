@@ -1,13 +1,18 @@
-export async function POST(req: Request) {
+export async function POST(req) {
   try {
-    const { message, apiKey } = await req.json();
+    const body = await req.json();
+    const message = body.message;
+    const apiKey = body.apiKey;
 
     if (!apiKey) {
-      return Response.json({ error: "Missing API key" }, { status: 400 });
+      return new Response(
+        JSON.stringify({ error: "Missing API key" }),
+        { status: 400 }
+      );
     }
 
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey,
       {
         method: "POST",
         headers: {
@@ -16,32 +21,40 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: message }],
-            },
-          ],
-        }),
+              parts: [
+                { text: message }
+              ]
+            }
+          ]
+        })
       }
     );
 
-    const data = await res.json();
+    const data = await response.json();
 
-    if (!res.ok) {
-      return Response.json(
-        { error: data.error?.message || "Gemini error" },
-        { status: 500 }
-      );
+    let text = "No response";
+
+    if (data.candidates &&
+        data.candidates[0] &&
+        data.candidates[0].content &&
+        data.candidates[0].content.parts &&
+        data.candidates[0].content.parts[0]) {
+      text = data.candidates[0].content.parts[0].text;
     }
 
-    const text =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response from Gemini";
+    if (data.error) {
+      text = data.error.message;
+    }
 
-    return Response.json({ text });
+    return new Response(
+      JSON.stringify({ text }),
+      { status: 200 }
+    );
 
-  } catch (err) {
-    return Response.json(
-      { error: "Server error" },
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ error: "Server error" }),
       { status: 500 }
     );
   }
-    }
+        }
