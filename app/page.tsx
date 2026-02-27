@@ -4,11 +4,10 @@ import { useState } from "react";
 
 export default function Home() {
 
-  const providers:any = {
+  const providerModels: any = {
 
     gemini: [
       "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
       "gemini-3-flash-preview",
       "gemini-3.1-pro-preview"
     ],
@@ -25,61 +24,81 @@ export default function Home() {
       "mixtral-8x7b-32768"
     ],
 
+    openrouter: [
+      "deepseek/deepseek-chat",
+      "mistralai/mixtral-8x7b-instruct",
+      "meta-llama/llama-3-70b-instruct"
+    ],
+
     claude: [
       "claude-3-haiku-20240307",
-      "claude-3-sonnet-20240229"
+      "claude-3-sonnet-20240229",
+      "claude-3-5-sonnet-20241022"
     ]
 
   };
 
 
+  const [apiKey, setApiKey] = useState("");
 
-  const [provider,setProvider] = useState("gemini");
+  const [provider, setProvider] = useState("gemini");
 
-  const [model,setModel] = useState(providers.gemini[0]);
+  const [model, setModel] =
+    useState(providerModels.gemini[0]);
 
-  const [apiKey,setApiKey] = useState("");
+  const [message, setMessage] = useState("");
 
-  const [message,setMessage] = useState("");
-
-  const [reply,setReply] = useState("");
-
+  const [reply, setReply] = useState("");
 
 
-  function changeProvider(p:any){
+
+  function changeProvider(p: string) {
 
     setProvider(p);
 
-    setModel(providers[p][0]);
+    setModel(
+      providerModels[p][0]
+    );
 
   }
 
 
 
-  async function send(){
+  async function send() {
 
-    if(!apiKey){
-      setReply("Enter API key first");
+    if (!apiKey) {
+      setReply("Enter API key");
       return;
     }
 
     setReply("Thinking...");
 
     const res =
-      await fetch("/api/chat",{
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-          provider,
-          model,
-          apiKey,
-          message
-        })
-      });
+      await fetch(
+        "/api/chat",
+        {
+          method: "POST",
 
-    const data = await res.json();
+          headers: {
+            "Content-Type":
+            "application/json"
+          },
+
+          body:
+          JSON.stringify({
+
+            apiKey,
+            provider,
+            model,
+            message
+
+          })
+
+        }
+      );
+
+    const data =
+      await res.json();
 
     setReply(data.text);
 
@@ -87,12 +106,11 @@ export default function Home() {
 
 
 
-  return(
+  return (
 
     <div style={{
-      display:"flex",
-      height:"100vh",
-      fontFamily:"Arial"
+      display: "flex",
+      height: "100vh"
     }}>
 
 
@@ -100,19 +118,17 @@ export default function Home() {
       {/* sidebar */}
 
       <div style={{
-        width:"240px",
-        background:"#ff6a00",
-        color:"white",
-        padding:"20px"
+        width: "240px",
+        background: "#ff6a00",
+        color: "white",
+        padding: "20px"
       }}>
 
         <h2>AI Workspace</h2>
 
         <p>Chat</p>
+        <p>Models</p>
         <p>API Keys</p>
-        <p>Images</p>
-        <p>Files</p>
-        <p>Automation</p>
 
       </div>
 
@@ -121,30 +137,36 @@ export default function Home() {
       {/* main */}
 
       <div style={{
-        flex:1,
-        padding:"40px",
-        background:"#f4f4f4"
+        flex: 1,
+        padding: "40px",
+        background: "#f4f4f4"
       }}>
 
 
 
-        <h2>API Setup</h2>
+        <h2>Setup</h2>
 
 
-        {/* api key */}
+        API Key
+
+        <br/>
 
         <input
 
           value={apiKey}
 
-          onChange={e=>setApiKey(e.target.value)}
+          onChange={
 
-          placeholder="Paste API key"
+            e =>
+            setApiKey(
+              e.target.value
+            )
+
+          }
 
           style={{
-            width:"500px",
-            padding:"10px",
-            border:"2px solid orange"
+            width: "500px",
+            padding: "10px"
           }}
 
         />
@@ -153,28 +175,44 @@ export default function Home() {
         <br/><br/>
 
 
-        {/* provider */}
+        Provider
+
+        <br/>
 
         <select
 
           value={provider}
 
-          onChange={e=>changeProvider(e.target.value)}
+          onChange={
 
-          style={{
-            padding:"10px",
-            border:"2px solid orange"
-          }}
+            e =>
+            changeProvider(
+              e.target.value
+            )
+
+          }
 
         >
 
-          <option value="gemini">Google Gemini</option>
+          <option value="gemini">
+            Gemini
+          </option>
 
-          <option value="openai">OpenAI</option>
+          <option value="openai">
+            OpenAI
+          </option>
 
-          <option value="groq">Groq</option>
+          <option value="groq">
+            Groq
+          </option>
 
-          <option value="claude">Claude</option>
+          <option value="openrouter">
+            OpenRouter
+          </option>
+
+          <option value="claude">
+            Claude
+          </option>
 
         </select>
 
@@ -183,32 +221,41 @@ export default function Home() {
         <br/><br/>
 
 
-        {/* model */}
+        Model
+
+        <br/>
 
         <select
 
           value={model}
 
-          onChange={e=>setModel(e.target.value)}
+          onChange={
 
-          style={{
-            padding:"10px",
-            border:"2px solid orange"
-          }}
+            e =>
+            setModel(
+              e.target.value
+            )
+
+          }
 
         >
 
           {
 
-            providers[provider].map((m:any)=>(
+            providerModels[provider]
+            .map(
 
-              <option key={m} value={m}>
+              (m: string) => (
 
-                {m}
+                <option key={m} value={m}>
 
-              </option>
+                  {m}
 
-            ))
+                </option>
+
+              )
+
+            )
 
           }
 
@@ -219,22 +266,26 @@ export default function Home() {
         <br/><br/>
 
 
+        Message
 
-        <h3>Chat</h3>
-
+        <br/>
 
         <input
 
           value={message}
 
-          onChange={e=>setMessage(e.target.value)}
+          onChange={
 
-          placeholder="Type message"
+            e =>
+            setMessage(
+              e.target.value
+            )
+
+          }
 
           style={{
-            width:"600px",
-            padding:"12px",
-            border:"2px solid orange"
+            width: "600px",
+            padding: "10px"
           }}
 
         />
@@ -244,33 +295,21 @@ export default function Home() {
 
 
         <button
-
           onClick={send}
-
-          style={{
-            background:"#ff6a00",
-            color:"white",
-            padding:"12px 25px",
-            border:"none",
-            cursor:"pointer"
-          }}
-
         >
-
           Send
-
         </button>
+
 
 
         <br/><br/>
 
 
         <div style={{
-          background:"white",
-          padding:"20px",
-          border:"2px solid orange",
-          width:"600px",
-          minHeight:"120px"
+          background: "white",
+          padding: "20px",
+          width: "600px",
+          minHeight: "100px"
         }}>
 
           {reply}
@@ -280,7 +319,6 @@ export default function Home() {
 
 
       </div>
-
 
     </div>
 
