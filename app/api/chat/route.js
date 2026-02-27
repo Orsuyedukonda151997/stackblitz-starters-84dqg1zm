@@ -1,80 +1,247 @@
 export async function POST(req) {
+
   try {
+
     const body = await req.json();
 
-    const message = body.message;
-    const apiKey = body.apiKey;
-    const model = body.model || "gemini-2.5-flash";
+    const apiKey   = body.apiKey;
+    const provider = body.provider;
+    const model    = body.model;
+    const message  = body.message;
 
-    if (!apiKey) {
+    if (!apiKey)
       return new Response(
-        JSON.stringify({ text: "Missing API key" }),
-        { status: 400 }
+        JSON.stringify({
+          text: "Missing API key"
+        }),
+        { status:400 }
       );
-    }
 
-    // REAL TIME CONTEXT
-    const now = new Date();
 
-    const context =
-      "Current date: " +
-      now.toLocaleDateString() +
-      "\nCurrent time: " +
-      now.toLocaleTimeString() +
-      "\nTimezone: " +
-      Intl.DateTimeFormat().resolvedOptions().timeZone +
-      "\n\nYou are an accurate AI assistant. Never invent facts. If unsure, say you don't know.\n\nUser: " +
+    const now =
+      new Date().toLocaleString();
+
+    const prompt =
+      "Current date/time: " +
+      now +
+      "\nBe accurate.\nUser: " +
       message;
 
-    const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/" +
-        model +
-        ":generateContent?key=" +
-        apiKey,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: context,
-                },
-              ],
-            },
-          ],
-        }),
-      }
-    );
 
-    const data = await res.json();
+    let reply = "";
 
-    let reply = "No response";
 
-    if (
-      data.candidates &&
-      data.candidates.length > 0 &&
-      data.candidates[0].content.parts.length > 0
-    ) {
-      reply = data.candidates[0].content.parts[0].text;
+    // GEMINI
+    if (provider === "gemini") {
+
+      const res =
+        await fetch(
+
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        + model +
+        ":generateContent?key="
+        + apiKey,
+
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+            "application/json"
+          },
+
+          body:
+          JSON.stringify({
+
+            contents:[
+              {
+                parts:[
+                  {
+                    text:prompt
+                  }
+                ]
+              }
+            ]
+
+          })
+        }
+      );
+
+      const data =
+        await res.json();
+
+      reply =
+        data?.candidates?.[0]
+        ?.content?.parts?.[0]
+        ?.text;
+
     }
 
-    if (data.error) {
-      reply = data.error.message;
+
+
+    // OPENAI
+    if (provider === "openai") {
+
+      const res =
+        await fetch(
+
+        "https://api.openai.com/v1/chat/completions",
+
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+            "application/json",
+
+            "Authorization":
+            "Bearer " + apiKey
+          },
+
+          body:
+          JSON.stringify({
+
+            model: model,
+
+            messages:[
+              {
+                role:"user",
+                content:prompt
+              }
+            ]
+
+          })
+        }
+      );
+
+      const data =
+        await res.json();
+
+      reply =
+        data?.choices?.[0]
+        ?.message?.content;
+
     }
 
+
+
+    // CLAUDE
+    if (provider === "claude") {
+
+      const res =
+        await fetch(
+
+        "https://api.anthropic.com/v1/messages",
+
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+            "application/json",
+
+            "x-api-key":
+            apiKey,
+
+            "anthropic-version":
+            "2023-06-01"
+          },
+
+          body:
+          JSON.stringify({
+
+            model:model,
+
+            max_tokens:1000,
+
+            messages:[
+              {
+                role:"user",
+                content:prompt
+              }
+            ]
+
+          })
+        }
+      );
+
+      const data =
+        await res.json();
+
+      reply =
+        data?.content?.[0]?.text;
+
+    }
+
+
+
+    // GROQ
+    if (provider === "groq") {
+
+      const res =
+        await fetch(
+
+        "https://api.groq.com/openai/v1/chat/completions",
+
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+            "application/json",
+
+            "Authorization":
+            "Bearer " + apiKey
+          },
+
+          body:
+          JSON.stringify({
+
+            model:model,
+
+            messages:[
+              {
+                role:"user",
+                content:prompt
+              }
+            ]
+
+          })
+        }
+      );
+
+      const data =
+        await res.json();
+
+      reply =
+        data?.choices?.[0]
+        ?.message?.content;
+
+    }
+
+
+    if (!reply)
+      reply = "No response";
+
+
     return new Response(
-      JSON.stringify({ text: reply }),
-      { status: 200 }
+      JSON.stringify({
+        text:reply
+      }),
+      { status:200 }
     );
 
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ text: "Server error" }),
-      { status: 500 }
-    );
+
   }
+  catch {
+
+    return new Response(
+      JSON.stringify({
+        text:"Server error"
+      }),
+      { status:500 }
+    );
+
+  }
+
 }
